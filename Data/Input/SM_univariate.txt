@@ -1,0 +1,45 @@
+SampleName	Name	nr	S nummer	Sample identifier	Experiment	Reactor	Inoculum	Phase	Batch	Order	Type	Omics	IonisationMode	Comparison1	Comparison2	MultipleComparison1	MultipleComparison2
+200916s037	Heatlhy_ILE1_C3	1	S138A	IPDSH160-165_237	Final Promise_Healthy	ILE1	Ileal consortium	C3	1	22	Sample	Metabolomics	both	-1	-1	1	1
+200916s019	Heatlhy_ILE2_C3	2	S138B	IPDSH160-165_238	Final Promise_Healthy	ILE2	Ileal consortium	C3	1	4	Sample	Metabolomics	both	-1	-1	1	1
+200916s030	Heatlhy_ILE3_C3	3	S138C	IPDSH160-165_239	Final Promise_Healthy	ILE3	Ileal consortium	C3	1	15	Sample	Metabolomics	both	-1	-1	1	1
+200916s042	Heatlhy_PC1_C3	4	S138D	IPDSH160-165_240	Final Promise_Healthy	PC1	Donor 1	C3	1	27	Sample	Metabolomics	both	-1	-1	2	2
+200916s022	Heatlhy_DC1_C3	5	S138E	IPDSH160-165_241	Final Promise_Healthy	DC1	Donor 1	C3	1	7	Sample	Metabolomics	both	-1	-1	3	3
+200916s018	Heatlhy_PC2_C3	6	S138F	IPDSH160-165_242	Final Promise_Healthy	PC2	Donor 2	C3	1	3	Sample	Metabolomics	both	-1	-1	2	2
+200916s046	Heatlhy_DC2_C3	7	S138G	IPDSH160-165_243	Final Promise_Healthy	DC2	Donor 2	C3	1	31	Sample	Metabolomics	both	-1	-1	3	3
+200916s016	Heatlhy_PC3_C3	8	S138H	IPDSH160-165_244	Final Promise_Healthy	PC3	Donor 3	C3	1	1	Sample	Metabolomics	both	-1	-1	2	2
+200916s055	Heatlhy_DC3_C3	9	S138I	IPDSH160-165_245	Final Promise_Healthy	DC3	Donor 3	C3	1	40	Sample	Metabolomics	both	-1	-1	3	3
+200916s029	MetS_ILE4_C3	10	S138J	IPDSH160-165_995	Final Promise_MetS	ILE4	Ileal consortium	C3	1	14	Sample	Metabolomics	both	1	1	1	1
+200916s031	MetS_ILE5_C3	11	S139A	IPDSH160-165_996	Final Promise_MetS	ILE5	Ileal consortium	C3	1	16	Sample	Metabolomics	both	1	1	1	1
+200916s025	MetS_ILE6_C3	12	S139B	IPDSH160-165_997	Final Promise_MetS	ILE6	Ileal consortium	C3	1	10	Sample	Metabolomics	both	1	1	1	1
+200916s032	MetS_PC4_C3	13	S139C	IPDSH160-165_998	Final Promise_MetS	PC4	Donor 1	C3	1	17	Sample	Metabolomics	both	1	1	2	2
+200916s023	MetS_DC4_C3	14	S139D	IPDSH160-165_999	Final Promise_MetS	DC4	Donor 1	C3	1	8	Sample	Metabolomics	both	1	1	3	3
+200916s044	MetS_PC5_C3	15	S139E	IPDSH160-165_1000	Final Promise_MetS	PC5	Donor 2	C3	1	29	Sample	Metabolomics	both	1	1	2	2
+200916s035	MetS_DC5_C3	16	S139F	IPDSH160-165_1001	Final Promise_MetS	DC5	Donor 2	C3	1	20	Sample	Metabolomics	both	1	1	3	3
+200916s028	MetS_PC6_C3	17	S139G	IPDSH160-165_1002	Final Promise_MetS	PC6	Donor 3	C3	1	13	Sample	Metabolomics	both	1	1	2	2
+200916s020	MetS_DC6_C3	18	S139H	IPDSH160-165_1003	Final Promise_MetS	DC6	Donor 3	C3	1	5	Sample	Metabolomics	both	1	1	3	3
+200916s021	Heatlhy_ILE1_WSHT3	19	S139I	IPDSH160-165_748	Final Promise_Healthy	ILE1	Ileal consortium	WSHT3	1	6	Sample	Metabolomics	both	-1		1	4
+200916s040	Heatlhy_ILE2_WSHT3	20	S139J	IPDSH160-165_749	Final Promise_Healthy	ILE2	Ileal consortium	WSHT3	1	25	Sample	Metabolomics	both	-1		1	4
+200916s049	Heatlhy_ILE3_WSHT3	21	S140A	IPDSH160-165_750	Final Promise_Healthy	ILE3	Ileal consortium	WSHT3	1	34	Sample	Metabolomics	both	-1		1	4
+200916s047	Heatlhy_PC1_WSHT3	22	S140B	IPDSH160-165_751	Final Promise_Healthy	PC1	Donor 1	WSHT3	1	32	Sample	Metabolomics	both	-1		2	5
+200916s045	Heatlhy_DC1_WSHT3	23	S140C	IPDSH160-165_752	Final Promise_Healthy	DC1	Donor 1	WSHT3	1	30	Sample	Metabolomics	both	-1		3	6
+200916s033	Heatlhy_PC2_WSHT3	24	S140D	IPDSH160-165_753	Final Promise_Healthy	PC2	Donor 2	WSHT3	1	18	Sample	Metabolomics	both	-1		2	5
+200916s041	Heatlhy_DC2_WSHT3	25	S140E	IPDSH160-165_754	Final Promise_Healthy	DC2	Donor 2	WSHT3	1	26	Sample	Metabolomics	both	-1		3	6
+200916s054	Heatlhy_PC3_WSHT3	26	S140F	IPDSH160-165_755	Final Promise_Healthy	DC2	Donor 2	WSHT3	1	39	Sample	Metabolomics	both	-1		2	5
+200916s036	Heatlhy_DC3_WSHT3	27	S140G	IPDSH160-165_756	Final Promise_Healthy	DC3	Donor 3	WSHT3	1	21	Sample	Metabolomics	both	-1		3	6
+200916s034	MetS_ILE4_WSHT3	28	S140H	IPDSH160-165_1506	Final Promise_MetS	ILE4	Ileal consortium	WSHT3	1	19	Sample	Metabolomics	both	1		1	4
+200916s056	MetS_ILE5_WSHT3	29	S140I	IPDSH160-165_1507	Final Promise_MetS	ILE5	Ileal consortium	WSHT3	1	41	Sample	Metabolomics	both	1		1	4
+200916s048	MetS_ILE6_WSHT3	30	S140J	IPDSH160-165_1508	Final Promise_MetS	ILE6	Ileal consortium	WSHT3	1	33	Sample	Metabolomics	both	1		1	4
+200916s052	MetS_PC4_WSHT3	31	S141A	IPDSH160-165_1509	Final Promise_MetS	PC4	Donor 1	WSHT3	1	37	Sample	Metabolomics	both	1		2	5
+200916s017	MetS_DC4_WSHT3	32	S141B	IPDSH160-165_1510	Final Promise_MetS	DC4	Donor 1	WSHT3	1	2	Sample	Metabolomics	both	1		3	6
+200916s043	MetS_PC5_WSHT3	33	S141C	IPDSH160-165_1511	Final Promise_MetS	PC5	Donor 2	WSHT3	1	28	Sample	Metabolomics	both	1		2	5
+200916s057	MetS_DC5_WSHT3	34	S141D	IPDSH160-165_1512	Final Promise_MetS	DC5	Donor 2	WSHT3	1	42	Sample	Metabolomics	both	1		3	6
+200916s024	MetS_PC6_WSHT3	35	S141E	IPDSH160-165_1513	Final Promise_MetS	PC6	Donor 3	WSHT3	1	9	Sample	Metabolomics	both	1		2	5
+200916s053	MetS_DC6_WSHT3	36	S141F	IPDSH160-165_1514	Final Promise_MetS	DC6	Donor 3	WSHT3	1	38	Sample	Metabolomics	both	1		3	6
+200916s038	iQC3		iQC3	iQC3					1	11	QC	Metabolomics	both				
+200916s039	iQC4		iQC4	iQC4					1	12	QC	Metabolomics	both				
+200916s050	iQC5		iQC5	iQC5					1	23	QC	Metabolomics	both				
+200916s051	iQC6		iQC6	iQC6					1	24	QC	Metabolomics	both				
+200916s058	iQC7		iQC7	iQC7					1	35	QC	Metabolomics	both				
+200916s059	iQC8		iQC8	iQC8					1	36	QC	Metabolomics	both				
+200916s026	QC1		QC1	QC1					1	43	QC	Metabolomics	both				
+200916s027	QC2		QC2	QC2					1	44	QC	Metabolomics	both				

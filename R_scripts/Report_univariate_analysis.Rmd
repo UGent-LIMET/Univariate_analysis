@@ -1,0 +1,555 @@
+---
+output:
+  html_document: 
+    fig_width: 7
+    fig_height: 6
+    fig_caption: true 
+    df_print: kable
+  pdf_document: 
+    latex_engine: xelatex #pdf not working, no error either
+  word_document: default
+mainfont: LiberationSerif
+sansfont: LiberationSans
+monofont: LiberationMono
+title: "Report univariate analysis"
+# Title: Software framework for the processing and statistical analysis of multivariate MS-data
+# Owner: Laboratory of Integrative Metabolomics (LIMET), Ghent university
+# Creator: Dr. Marilyn De Graeve
+# Maintainer: <limet@ugent.be>
+# Script: Part IV: Report_univariate_analysis
+---
+
+```{r include=FALSE}
+
+knitr::opts_chunk$set(echo = FALSE)
+
+```
+
+<br> 
+
+This is the automatic report for the univariate analysis report part of
+
+```{r echo = FALSE}
+
+Date <- as.character(Sys.Date())
+#cat(paste("Experiment: ", name_project, sep = ""))
+#cat(paste("Date: ", Date, sep = ""))
+
+df_info <- data.frame(col1=c("Date", "Experiment", "Operator"), col2=c(Date, name_project, ""))
+
+suppressMessages(library(kableExtra))
+kable_input <- kable(df_info)
+kable_input <- kable_styling(kable_input, latex_options= c("scale_down", "hold_position"))
+gsub("<thead>.*</thead>", "", kable_input) #no header
+
+
+```
+
+<br> 
+
+**Setup**
+
+The following configuration settings were applied. See samplenames and group labels (i.e. from the (Multi)Comparisons) in the input sampleMetadata (SM) file. See metabolitenames in the input variableMetadata (VM) file.
+
+```{r echo = FALSE}
+
+setwd(PATH)
+
+INPUT <- file.path(path_data_in, "Configuration.R")
+report_setup <- read.table(INPUT, header=TRUE, sep = "\n")
+#report_setup
+
+#keep only relevant part of config
+begin_paragraph <- "##########Univariate_analysis##########"
+end_paragraph <-  "#####################"  #first after begin, not unique
+
+txt <- readLines(INPUT)
+lns <- data.frame(beg=which(grepl(begin_paragraph,txt)),
+                  end=which(grepl(end_paragraph,txt)))
+
+
+   
+find_end_module_paragraph <- function(df){  
+  #df is df with multiple lines of end_paragraph "#####################"
+  #find correct end by searching occurance after begin_paragraph, which is unique
+  
+  #calc distance
+  df$diff <- df$end - df$beg
+  
+  #add bool if end occours after begin paragr
+  for (row in 1:nrow(df)) {
+    if (df[row, "diff"] > 0) { 
+      df[row,"boolean"] <- TRUE
+    }
+    if (df[row, "diff"] <= 0) {
+      df[row,"boolean"] <- FALSE
+    }   
+  }
+  
+  df <- df[df$boolean == T,] #end occour after begin
+  df <- df[1,] #1st occurence belog with this begin
+  
+  return(df)
+}
+
+              
+lns <- find_end_module_paragraph(lns)  #find only correct end location
+
+txt2 <- lapply(seq_along(lns$beg),function(l){
+  txt[seq(from=lns$beg[l],
+                to=lns$end[l],
+                by=1)]
+})
+txt3 <- as.data.frame(unlist(txt2))
+
+
+suppressMessages(library(kableExtra))
+kable_input <- kable(txt3)
+kable_input <- kable_styling(kable_input, latex_options= c("scale_down", "hold_position"))
+gsub("<thead>.*</thead>", "", kable_input) #no header
+
+```
+
+<br> 
+
+With additional information from the operator.
+
+```{r echo = FALSE}
+
+suppressMessages(library(kableExtra))
+kable_input <- kable(USER_COMMENT)
+kable_input <- kable_styling(kable_input, latex_options= c("scale_down", "hold_position"))
+gsub("<thead>.*</thead>", "", kable_input) #no header
+
+
+```
+
+<br> 
+
+**Results**
+
+<br> 
+
+**Hierarchical clustering of the biological samples**
+
+Heat map of samples hierarchical clustered according to samples and corresponding
+dendrogram.
+
+```{r echo = FALSE, out.width = "70%", fig.align="center"}
+
+setwd(PATH)
+suppressMessages(library(EBImage))
+
+name_plot <- paste(name_project, "_dendogram_clust.png", sep="")
+name_plot <- file.path(path_data_out, name_plot)
+heatmap_clust <- readImage(name_plot)
+display(heatmap_clust)
+
+```
+
+```{r echo = FALSE, out.width = "100%", fig.align="center"}
+
+setwd(PATH)
+suppressMessages(library(EBImage))
+
+name_plot <- paste(name_project, "_heatmap_clust.png", sep="")
+name_plot <- file.path(path_data_out, name_plot)
+heatmap_clust <- readImage(name_plot)
+display(heatmap_clust)
+
+```
+
+<br>
+
+Logaritmic scaled heat map of samples hierarchical clustered according to samples and corresponding
+dendrogram.
+
+
+```{r echo = FALSE, out.width = "70%", fig.align="center"}
+
+setwd(PATH)
+suppressMessages(library(EBImage))
+
+name_plot <- paste(name_project, "_dendogram_clust.png", sep="")
+name_plot <- file.path(path_data_out, name_plot)
+heatmap_clust <- readImage(name_plot)
+display(heatmap_clust)
+
+```
+
+```{r echo = FALSE, out.width = "100%", fig.align="center"}
+
+setwd(PATH)
+suppressMessages(library(EBImage))
+
+name_plot <- paste(name_project, "_heatmap_clustLOG.png", sep="")
+name_plot <- file.path(path_data_out, name_plot)
+heatmap_clust <- readImage(name_plot)
+display(heatmap_clust)
+
+```
+
+<br>
+
+**Univariate analysis according to comparisons**
+
+<br>
+
+```{r comment=NA, echo=FALSE, warning=FALSE, out.width= '100%', fig.align="center"}
+
+setwd(PATH)
+suppressMessages(library(EBImage))
+
+summary_comps <- NULL #indep if comps/mcomps, always make here
+summary_signif_vars <- NULL
+
+if(AMOUNT_OF_COMPARISONS >= 1){
+  cat("If no comparisons are present, this is depicted by the comment 'object is NULL'.")
+  cat("\n")
+
+  for(pairwise_comparison in 1:AMOUNT_OF_COMPARISONS){
+  
+
+    
+    cat("\n\n")
+    cat("******************************************************************************")
+    cat("\n")
+    cat(paste("COMPARISON "), pairwise_comparison, sep = "")
+    cat("\n")
+    cat("******************************************************************************")
+    cat("\n\n")
+    
+    cat("\n\n")
+    cat(paste("Heat map of samples according to Comparison ", pairwise_comparison, sep=""))
+    cat("\n\n")
+    
+    try({
+      file <- list.files(path=path_data_out, pattern = paste0("_heatmap_group_comparison", pairwise_comparison, ".png"))
+      #keep only png, not pdf
+      name_plot <- file.path(path_data_out, file)
+      PNG <- readImage(name_plot)
+      display(PNG)
+    })
+   
+    cat("\n\n")
+    cat(paste("Logaritmic scaled heat map of samples according to Comparison ", pairwise_comparison, sep=""))
+    cat("\n\n")
+    
+    try({
+      file <- list.files(path=path_data_out, pattern = paste0("_heatmap_group_comparison",pairwise_comparison, "LOG.png"))
+      #keep only png, not pdf
+      name_plot <- file.path(path_data_out, file)
+      PNG <- readImage(name_plot)
+      display(PNG)
+    })
+    
+    cat("\n\n")
+    cat(paste("Number of significant metabolites in Comparison ", pairwise_comparison, sep= ""))
+    cat("\n\n")
+    
+    try({
+    
+      INPUT <- paste0(name_project, "_pvalues_Comparisons.txt")
+      INPUT <- file.path(path_data_out, INPUT)
+      report_pvalues_Comparisons <- read.table(INPUT, header=TRUE, sep="\t")
+      report_pvalues_Comparisons$Standard <- as.character(report_pvalues_Comparisons$Standard)
+        
+      #only for comp
+      report_pvalues_Comparisons <- report_pvalues_Comparisons[report_pvalues_Comparisons$Pairwise.comparison == pairwise_comparison,]
+      nr_vars <- nrow(report_pvalues_Comparisons)
+      
+      #keep only SIGNIF variables in table report
+      report_pvalues_Comparisons <- report_pvalues_Comparisons[report_pvalues_Comparisons$p.value < 0.05,]
+      signif_vars <- nrow(report_pvalues_Comparisons)
+      
+      report_nr_signif <- paste("There are ", nrow(report_pvalues_Comparisons), " significant variables (of ", nr_vars, " variables in total) with p-value < 0.05 found for Comparison ", pairwise_comparison, ".")
+      
+      df_info <- data.frame(col1=c("Comparison", pairwise_comparison), col2=c("Significant variables with p-value < 0.05", signif_vars), col3=c("Total variables", nr_vars)) 
+      
+      #kable doens't work whitin loop
+      #suppressMessages(library(kableExtra))
+      #kable_input <- kable(df_info)
+      #kable_input <- kable_styling(kable_input, latex_options= c("scale_down", "hold_position"))
+      #gsub("<thead>.*</thead>", "", kable_input) #no header
+
+      print(report_nr_signif)
+    })
+    
+    
+    cat("\n\n")
+    cat(paste("Table of significant metabolites in Comparison ", pairwise_comparison, sep= ""))
+    cat("\n\n")
+    
+    
+    cat("o Table containing the pairwise comparison, standard (from metabolitename in VM), the used hypothesis test, group Nrs (-1 and 1), amount of samples per group, mean per group, standard deviation (SD) per group and the assigned p-value.")
+    cat("\n\n")
+    cat("In this report, only the MetaboliteName of significant (“SIGNIF”) variables are shown. The complete table with statisitcs is present in the output folder.")
+    cat("\n\n")
+    
+    try({
+      print(report_pvalues_Comparisons$Standard)
+      #report_pvalues_Comparisons
+    })
+    
+    
+    cat("\n\n")
+    cat(paste("Box plots of significant metabolites in Comparison ", pairwise_comparison, sep= ""))
+    cat("\n\n")
+    
+    
+    cat("o Box plots of significant (p<0.05; “SIGNIF”) and not significant (“SN”) variables using unpaired Student’s or Welch’s t-test (with or without an unequal variance) if normal distribution is obtained (Shapiro-Wilk Test)")
+    cat("\n\n")
+    cat("o Box plots of significant (p<0.05; “SIGNIF”) and not significant (“SN”) variables using Mann-Whitney U test if no normal distribution is obtained (Shapiro-Wilk Test)")
+    cat("\n\n")
+    cat("In this report, only box plots of significant (“SIGNIF”) variables are shown. The complete collection of plots is present in the output folder.")
+    cat("\n\n")
+    
+    try({
+      files <- list.files(path=path_data_out, pattern = paste0("_boxplot_comp", pairwise_comparison))
+      files <- files[grepl("SIGNIF",files)] #keep only SIGNIF
+      nr_plots <- length(files)
+      
+      image_combined <- NULL
+      
+      i <- 1
+      for(file_group in files){
+        name_plot <- file_group
+        name_plot <- file.path(path_data_out, name_plot)
+        PNG <- readImage(name_plot)
+        image_combined <- combine(image_combined, PNG)
+        if(i %%15 == 0 | i == nr_plots){
+          #plot per 5*3=15 plots for good zoom visual
+          display(image_combined, method="raster", all=T, nx=3, spacing = 0.05, margin = 2)
+          image_combined <- NULL
+        }
+        i <- i+1
+      }
+
+    })  
+    
+    #for summary of report:
+    summary_comps <- c(summary_comps, paste0("Comparison ", pairwise_comparison))
+    summary_signif_vars <- c(summary_signif_vars, signif_vars)
+  }
+}
+```
+
+<br>
+
+**Univariate analysis according to MulitpleComparisons**
+
+<br>
+
+```{r comment=NA, echo=FALSE, warning=FALSE, out.width= '100%', fig.align="center"}
+
+setwd(PATH)
+suppressMessages(library(EBImage))
+
+if(AMOUNT_OF_MULTIPLE_COMPARISONS >= 1){
+  cat("If no multiple comparisons are present, this is depicted by the comment 'object is NULL'.")
+  cat("\n")
+
+  
+  for(multiple_comparison in 1:AMOUNT_OF_MULTIPLE_COMPARISONS){
+  
+
+    
+    cat("\n\n")
+    cat("******************************************************************************")
+    cat("\n")
+    cat(paste("MULTICOMPARISON "), multiple_comparison, sep = "")
+    cat("\n")
+    cat("******************************************************************************")
+    cat("\n\n")
+    
+    cat("\n\n")
+    cat(paste("Heat map of samples according to MultipleComparison ", multiple_comparison, sep=""))
+    cat("\n\n")
+    
+    try({
+      file <- list.files(path=path_data_out, pattern = paste0("_heatmap_group_Mcomparison", multiple_comparison, ".png"))
+      #keep only png, not pdf
+      name_plot <- file.path(path_data_out, file)
+      PNG <- readImage(name_plot)
+      display(PNG)
+    })
+   
+    cat("\n\n")
+    cat(paste("Logaritmic scaled heat map of samples according to MultipleComparison ", multiple_comparison, sep=""))
+    cat("\n\n")
+    
+    try({
+      file <- list.files(path=path_data_out, pattern = paste0("_heatmap_group_Mcomparison",multiple_comparison, "LOG.png"))
+      #keep only png, not pdf
+      name_plot <- file.path(path_data_out, file)
+      PNG <- readImage(name_plot)
+      display(PNG)
+    })
+    
+    cat("\n\n")
+    cat(paste("Number of significant metabolites in MultipleComparison ", multiple_comparison, sep= ""))
+    cat("\n\n")
+    
+    try({
+    
+      INPUT <- paste0(name_project, "_pvalues_MultipleComparisons.txt")
+      INPUT <- file.path(path_data_out, INPUT)
+      report_pvalues_Comparisons <- read.table(INPUT, header=TRUE, sep="\t")
+      report_pvalues_Comparisons$Standard <- as.character(report_pvalues_Comparisons$Standard)
+      
+      #only for comp
+      report_pvalues_Comparisons <- report_pvalues_Comparisons[report_pvalues_Comparisons$Multiple.comparison == multiple_comparison,]
+      nr_vars <- nrow(report_pvalues_Comparisons)
+      
+      #keep only SIGNIF variables in table report
+      report_pvalues_Comparisons <- report_pvalues_Comparisons[report_pvalues_Comparisons$p.value < 0.05,]
+      signif_vars <- nrow(report_pvalues_Comparisons)
+      
+      report_nr_signif <- paste("There are ", nrow(report_pvalues_Comparisons), " significant variables (of ", nr_vars, " variables in total) with p-value < 0.05 found for MultipleComparison ", multiple_comparison, ".")
+      
+      df_info <- data.frame(col1=c("MultipleComparison", multiple_comparison), col2=c("Significant variables with p-value < 0.05", signif_vars), col3=c("Total variables", nr_vars)) 
+      
+      #kable doens't work whitin loop
+      #suppressMessages(library(kableExtra))
+      #kable_input <- kable(df_info)
+      #kable_input <- kable_styling(kable_input, latex_options= c("scale_down", "hold_position"))
+      #gsub("<thead>.*</thead>", "", kable_input) #no header
+
+      print(report_nr_signif)
+    })
+    
+    
+    cat("\n\n")
+    cat(paste("Table of significant metabolites in MultipleComparison ", multiple_comparison, sep= ""))
+    cat("\n\n")
+    
+    
+    cat("o Table containing the multiple comparison, standard (from metabolitename in VM), the used hypothesis test, group Nrs (1, 2, 3, ...), amount of samples per group, mean per group, standard deviation (SD) per group and the assigned p-value.")
+    cat("\n\n")
+    cat("In this report, only the MetaboliteName of significant (“SIGNIF”) variables are shown. The complete table with statisitcs is present in the output folder.")
+    cat("\n\n")
+    
+    try({
+      print(report_pvalues_Comparisons$Standard)
+    })
+    
+    cat("\n\n")
+    cat(paste("Box plots of significant metabolites in MultipleComparison ", multiple_comparison, sep= ""))
+    cat("\n\n")
+    
+    
+    cat("o Box plots of significant (p<0.05; “SIGNIF”) and not significant (“SN”) variables using one-way ANOVA if normal distribution is obtained (Shapiro-Wilk Test)")
+    cat("\n\n")
+    cat("o Box plots of significant (p<0.05; “SIGNIF”) and not significant (“SN”) variables using Kruskal Wallis if no normal distribution is obtained (Shapiro-Wilk Test)")
+    cat("\n\n")
+    cat("o For significant metabolites after one-way ANOVA, Tukeys Honest Significant Difference post-hoc test: table with in-between comparisons adjusted p-values and mean difference plot. Not included in report, see output folder.")
+    cat("\n\n")
+    cat("o For significant metabolites after Kruskal Wallis, Dunn’s post-hoc test: table with inbetween comparisons adjusted p-values using Benjamini-Hochberg correction. Not included in report, see output folder.")
+    cat("\n\n")
+    cat("In this report, only box plots of significant (“SIGNIF”) variables are shown. The complete collection of plots is present in the output folder.")
+    cat("\n\n")
+    
+    try({
+      files <- list.files(path=path_data_out, pattern = paste0("_boxplot_Mcomp", multiple_comparison))
+      files <- files[grepl("SIGNIF",files)] #keep only SIGNIF
+      nr_plots <- length(files)
+      
+      image_combined <- NULL
+      
+      i <- 1
+      for(file_group in files){
+        name_plot <- file_group
+        name_plot <- file.path(path_data_out, name_plot)
+        PNG <- readImage(name_plot)
+        image_combined <- combine(image_combined, PNG)
+        if(i %%15 == 0 | i == nr_plots){
+          #plot per 5*3=15 plots for good zoom visual
+          display(image_combined, method="raster", all=T, nx=3, spacing = 0.05, margin = 2) #nx=-1 
+          image_combined <- NULL
+        }
+        i <- i+1
+      }
+    })  
+    
+    #for summary of report:
+    summary_comps <- c(summary_comps, paste0("MultipleComparison ", multiple_comparison))
+    summary_signif_vars <- c(summary_signif_vars, signif_vars)
+  }
+}
+```
+
+<br>
+
+**Summary table**
+
+<br> 
+
+```{r echo = FALSE}
+
+df_sv <- data.frame(col1=c("**(Multi)Comparison**", summary_comps), col2=c("**Number of significant metabolites**", summary_signif_vars))
+
+suppressMessages(library(kableExtra))
+kable_input <- kable(df_sv)
+kable_input <- kable_styling(kable_input, latex_options= c("scale_down", "hold_position"))
+gsub("<thead>.*</thead>", "", kable_input) #no header
+
+
+```
+
+<br>
+
+**References**
+
+<u> Hierarchical clustering: </u> 
+
+Wilkinson, L. & Friendly, M. The History of the Cluster Heat Map. Am. Stat. 63, 179–184 (2009).
+
+Cohen-addad, V., Kanade, V., Mallmann-trenn, F. & Mathieu, C. Hierarchical Clustering: Objective Functions and Algorithms. J. ACM 66, (2019).
+
+<u> Student’s t-test: </u>
+
+Student. The probable error of a mean. Biometrika 6, 1–25 (1908).
+
+<u> Welch’s t-test: </u>
+
+Wellch, B. L. The generalization of ‘student’s’ problem when several different population variances are involved. Biometrika 34, 28–35 (1947).
+
+<u> Shapiro-Wilk Test: </u>
+
+Kim, H.-Y. Statistical notes for clinical researchers: assessing normal distribution (2) using skewness and kurtosis. Restor. Dent. Endod. 38, 52 (2013).
+
+<u> Mann-Whitney U test: </u>
+
+Bauer, D. F. Constructing Confidence Sets Using Rank Statistics. J. Am. Stat. Assoc. 67, 687–690 (1972).
+Hollander, M., Wolfe, D. A. & Chicken, E. Nonparametric Statistical Methods. Nonparametric Statistical Methods (John Wiley & Sons, 1973).
+
+<u> one-way ANOVA test: </u>
+
+Sokal, R. R. & Rohlf, F. J. Biometry: The Principles and Practices of Statistics in Biological Research (1995).
+
+<u> Kruskal Wallis test: </u>
+
+Hollander, M., Wolfe, D. A. & Chicken, E. Nonparametric Statistical Methods. Nonparametric Statistical Methods (John Wiley & Sons, 1973).
+
+<u> Tukeys Honest Significant Difference post-hoc test: </u>
+
+Yandell, B. S. Practical Data Analysis for Designed Experiments ( Chapman and Hall/CRC, 1997).
+
+<u> Dunn’s post-hoc test: </u>
+
+Dunn, O. J. Multiple Comparisons Using Rank Sums. Technometrics 6, 241–252 (1964).
+
+<u> Benjamini-Hochberg correction: </u>
+
+Benjamini, Y. & Hochberg, Y. Controlling The False Discovery Rate - A Practical And Powerful Approach To Multiple Testing. J. R. Stat. Soc., Ser. B 57, 289–300 (1995).
+
+<br>
+
+<br>
+
+End of univariate analysis report
+
+<br>
+
+
+

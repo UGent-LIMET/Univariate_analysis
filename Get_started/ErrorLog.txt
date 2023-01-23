@@ -1,0 +1,69 @@
+# Title: Software framework for the processing and statistical analysis of multivariate MS-data
+# Owner: Laboratory of Integrative Metabolomics (LIMET), Ghent university
+# Creator: Dr. Marilyn De Graeve
+# Maintainer: <limet@ugent.be>
+# Script: ErrorLog
+
+
+##########Frequently got errors##########
+#### MAIN ####
+Error in setwd(path_R_scripts) : cannot change working directory
+= forget to change path of computer, or typing error in folder "R_scripts" (eg. Rscripts)
+
+Error in setwd(path_data_in) : cannot change working directory
+= path is correct, problem: projectname wrong (eg written with space), non-existent folder to input (development after source config w wrong name)
+
+Error : cannot allocate vector of size 7.8 Mb
+or 
+killed during process 
+= not enough RAM for R pipeline to compute (probably step annotate from part pre-processing Thermo), increase RAM of Rbox if possible
+
+Not engough space
+= hard drive is full, free up space for calculating
+
+Error in file(file, ifelse(append, "a", "w")) : cannot open the connection
+= close excel, close other files opened, check path in main.r correct 
+
+Error in file(filename, "r", encoding = encoding): cannot open the connection
+Calls: source -> file
+In addition: Warning message: In file (filename, "r", encoding = encoding): cannot open file 'configuration.R': No such file or directory
+Execution halted
+= configuration.r.r extension is wrong, check configuration.r instead of twice suffix .r
+
+(process:5453): Pango-WARNING **: Invalid UTF-8 string passed to pango_layout_set_text()
+= created/exported txt can be in wrong format (incorrect UTF-8), copy/paste from txt to txt to solve.
+
+
+####PART 2: univariate analysis####
+Error in made.names(col.names, unique = TRUE):
+   invalid mulitbyte string at '<ff><fe>S'
+=> make sure no symboles in the MetaboliteName in VM, no symbols ("'", ",", """, "alfa", "beta", ENTERS)
+
+Error in `[.data.frame`(data, , x) : undefined columns selected
+=> in variablemetadata/samplemetadata below table random cell with content
+
+stopifnot(min(variableMetadata[,COLLUMN_NR_START_SAMPLES:ncol(variableMetadata)]) >= 0) #no negative numbers allowed
+=> in VM loading error because negative values or NAs (empty cells) present in VM intensities
+
+Error in `rownames<-`(`*tmp*`, value = c(17L, 26L, 15L, 9L, 29L, 8L, 1L,  : 
+  attempt to set 'rownames' on an object with no dimensions
+=> Min 2 standards needed for script to work
+
+Error in `rownames<-`(`*tmp*`, value = samples_metadata_comp$Name) : 
+  attempt to set 'rownames' on an object with no dimensions
+=> Min 2 standards needed for script to work, if 2 standards are present, check if all zero-values of variable in the comparison. easy fix: duplicate standards in VM to work. 
+
+Error in `row.names<-.data.frame`(`*tmp*`, value = value) : 
+  duplicate 'row.names' are not allowed
+In addition: Warning message:
+non-unique value when setting 'row.names': ‘iQC’
+=> in SM column Name: use unique names (not eg iQC but iQC1)
+
+Error in readRDS(ffile) : error reading from connection
+Calls: source -> withVisible -> eval -> eval -> library -> readRDS
+Execution halted
+=> in rbox dunn.test installed but not saved (ask Marilyn)
+
+
+#
+####################

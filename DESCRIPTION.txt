@@ -1,0 +1,27 @@
+# Title: Software framework for the processing and statistical analysis of multivariate MS-data
+# Owner: Laboratory of Integrative Metabolomics (LIMET), Ghent university
+# Creator: Dr. Marilyn De Graeve
+# Maintainer: <limet@ugent.be>
+# Repository: Univariate_statistics
+
+# Description: This module performs hierarchical clustering of the biological samples, shows variables intensities in heat maps according to clustering samples and according to group labels; and creates boxplots of variables (univariate analysis). 
+# Input: 
+# -	Configuration.R
+# -	VariableMetadata.txt
+# -	SampleMetadata.txt
+# Output: 
+# -	Heat map of samples hierarchical clustered according to samples and corresponding dendrogram
+# -	Per pairwise comparison:
+#   o	Heat map of samples according to group labels
+#   o	Box plots of significant (p<0.05; “SIGNIF”) and not significant (“SN”) variables using unpaired Student’s or Welch’s t-test (with or without an unequal variance) if normal distribution is obtained (Shapiro-Wilk Test)
+#   o	Box plots of significant (p<0.05; “SIGNIF”) and not significant (“SN”) variables using Mann-Whitney U test if no normal distribution is obtained (Shapiro-Wilk Test)
+#   o	Table containing p-values, number of samples, mean and SD per group
+# -	Per multiple comparison:
+#   o	Heat map of samples according to group labels
+#   o	Box plots of significant (p<0.05; “SIGNIF”) and not significant (“SN”) variables using one-way ANOVA if normal distribution is obtained (Shapiro-Wilk Test)
+#   o	Box plots of significant (p<0.05; “SIGNIF”) and not significant (“SN”) variables using Kruskal Wallis if no normal distribution is obtained (Shapiro-Wilk Test)
+#   o	Table containing p-values, number of samples, mean and SD per group
+#   o	For significant metabolites after one-way ANOVA, Tukeys Honest Significant Difference post-hoc test: table with in-between comparisons adjusted p-values and mean difference plot
+#   o	For significant metabolites after Kruskal Wallis, Dunn’s post-hoc test: table with in-between comparisons adjusted p-values using Benjamini-Hochberg correction
+# Report:
+# - Report_univariate_statistics.html
