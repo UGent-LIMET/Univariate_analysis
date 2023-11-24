@@ -137,9 +137,9 @@ nsamples_metadata <- sampleMetadata
 
 #report t-test p-values for each pairwise comparison and each variable
 name_report_ttest <- paste(name_project,'_pvalues_Comparisons.txt', sep="")
-line0 <- paste(c("Pairwise comparison", "Standard", "Hypothesis test", "Group Nrs" ,"Amount per group", "Mean per group", "SD per group", "p-value"), collapse= '\t')
+line0 <- paste(c("Pairwise comparison", "Standard", "Hypothesis test", "Group Nrs" ,"Amount per group", "Mean per group", "Median per group", "SD per group", "p-value", "Fold change"), collapse= '\t')
 append_result_to_report(line0, name_report_ttest)
-
+q_values <- NULL #adjusted p-value, calculated per comparison but written to report after loop
 
 if(AMOUNT_OF_COMPARISONS >= 1){
   for(pairwise_comparison in 1:AMOUNT_OF_COMPARISONS){
@@ -252,6 +252,7 @@ if(AMOUNT_OF_COMPARISONS >= 1){
       names_groups <- NULL
       amount_groups <- NULL
       mean_groups <- NULL
+      median_groups <- NULL
       sd_groups <- NULL
       
       #calculate normality per group in comp
@@ -266,8 +267,8 @@ if(AMOUNT_OF_COMPARISONS >= 1){
         #The Shapiro-Wilk Test tests the null hypothesis that the samples come from a normal distribution vs. the alternative hypothesis that the samples do not come from a normal distribution. 
         #In this case, the p-value of the test is 0.005999, which is less than the alpha level of 0.05. This suggests that the samples do not come a normal distribution.
         #https://www.statology.org/anova-assumptions/
-		#shapiro.test(rnorm(100, mean = 5, sd = 3))
-		#shapiro.test(runif(100, min = 2, max = 4))
+		    #shapiro.test(rnorm(100, mean = 5, sd = 3))
+	    	#shapiro.test(runif(100, min = 2, max = 4))
 
         #! if keep normal => error if all intensit are SAME in 1 group (all both groups 0 are not present in samples_matrix_comp_no0)
         #if 1 group all are SAME value: ! "Error in shapiro.test(test) : all 'x' values are identical" => normal OK (very narrow distribution inf small)
@@ -293,6 +294,7 @@ if(AMOUNT_OF_COMPARISONS >= 1){
         names_groups <- c(names_groups, nr)
         amount_groups <- c(amount_groups, length(y1))
         mean_groups <- c(mean_groups, format(round(mean(y1),digits=3),nsmall=3))
+        median_groups <- c(median_groups, format(round(median(y1),digits=3),nsmall=3))
         sd_groups <- c(sd_groups, format(round(sd(y1),digits=3),nsmall=3))
       }
       
@@ -300,13 +302,15 @@ if(AMOUNT_OF_COMPARISONS >= 1){
       names_groups <- paste(unlist(names_groups), collapse='; ')
       amount_groups <- paste(unlist(amount_groups), collapse='; ')
       mean_groups <- paste(unlist(mean_groups), collapse='; ')
+      median_groups <- paste(unlist(median_groups), collapse='; ')
       sd_groups <- paste(unlist(sd_groups), collapse='; ')
-      
-      #manual with +/-1 select  
-      y1 <- comp_variable[comp_variable$comp == "-1",] 
+      fold_changes <- ( (as.numeric(strsplit(mean_groups,"; ", fixed=T)[[1]][1]) +0.00000001) / (as.numeric(strsplit(mean_groups,"; ", fixed=T)[[1]][2])+0.00000001) ) #mean ration fold change
+        
+      #manual with +/-1 select  #todo make work if needed for other label 
+      y1 <- comp_variable[comp_variable$comp == sort(unique(comp))[1],]   #group "-1"
       y1 <- y1[,1]
       
-      y2 <- comp_variable[comp_variable$comp == "1",] 
+      y2 <- comp_variable[comp_variable$comp == sort(unique(comp))[2],]   #group "+1"
       y2 <- y2[,1]
       
       
@@ -327,7 +331,7 @@ if(AMOUNT_OF_COMPARISONS >= 1){
         name_test <- unlist(ttest_univar_comp$method)
         
         #report t-test p-values for each pairwise comparison and each variable (add here)
-        line_ <- paste(c(pairwise_comparison, name_standard, name_test, names_groups, amount_groups, mean_groups, sd_groups, p_value), collapse='\t')
+        line_ <- paste(c(pairwise_comparison, name_standard, name_test, names_groups, amount_groups, mean_groups, median_groups, sd_groups, p_value, fold_changes), collapse='\t')
         append_result_to_report(line_, name_report_ttest)
         
         if(is.na(p_value)){
@@ -366,7 +370,7 @@ if(AMOUNT_OF_COMPARISONS >= 1){
         name_test <- unlist(wicox_univar_comp$method)
         
         #report wilcoxon p-values for each pairwise comparison and each variable (add here)
-        line_ <- paste(c(pairwise_comparison, name_standard, name_test, names_groups, amount_groups, mean_groups, sd_groups, p_value), collapse='\t')
+        line_ <- paste(c(pairwise_comparison, name_standard, name_test, names_groups, amount_groups, mean_groups, median_groups, sd_groups, p_value, fold_changes), collapse='\t')
         append_result_to_report(line_, name_report_ttest)
         
         if(is.na(p_value)){
@@ -389,8 +393,31 @@ if(AMOUNT_OF_COMPARISONS >= 1){
         }
       }
     }
+    
+    ### Volcano plot (using mean ratio fold change) + calc adj p-value
+    volcano_df <- read.table(name_report_ttest, header=TRUE, sep="\t") 
+    volcano_df <- volcano_df[volcano_df$Pairwise.comparison == pairwise_comparison,]
+    q <- p.adjust(volcano_df$p.value, method = "fdr")
+    q_values <- c(q_values, q)
+    volcano_df$Adjusted_p_value <- q
+    
+    plot_volcano_comp <- plot_volcano(volcano_df)
+    png(paste(name_project, "_volcano_comp" , pairwise_comparison, ".png", sep=""), width=5, height=5, units="in", res=150)
+    plot(plot_volcano_comp)
+    dev.off() 
+    
   }
+  
+  #### After all pairwise comparisons done, write adj p-values to report
+  report_pairwise <- read.table(name_report_ttest, header=TRUE, sep="\t")
+  report_pairwise$Adjusted_p_value <- q_values
+  name_report_ttest2 <- paste(name_project,'_adjpvalues_Comparisons.txt', sep="")
+  write_dataframe_as_txt_file(report_pairwise, name_report_ttest2) 
+  
 }
+
+
+
 ###################
 
 
@@ -402,8 +429,9 @@ nsamples_metadata <- sampleMetadata
 
 #report ANOVA p-values for each multiple comparison and each variable
 name_report_ANOVA <- paste(name_project,'_pvalues_MultipleComparisons.txt', sep="")
-line0 <- paste(c("Multiple comparison", "Standard", "Hypothesis test", "Groups Nrs" ,"Amount per group", "Mean per group", "SD per group", "p-value"), collapse = '\t')
+line0 <- paste(c("Multiple comparison", "Standard", "Hypothesis test", "Groups Nrs" ,"Amount per group", "Mean per group", "Median per group", "SD per group", "p-value"), collapse = '\t')
 append_result_to_report(line0, name_report_ANOVA)
+q_values <- NULL #adjusted p-value, calculated per comparison but written to report after loop
 
 #report posthoc after anova if signif
 name_report_posthoc <- paste(name_project,'_TukeyHSD_MultipleComparisons.txt', sep="")
@@ -525,6 +553,7 @@ if(AMOUNT_OF_MULTIPLE_COMPARISONS >= 1){
       names_groups <- NULL
       amount_groups <- NULL
       mean_groups <- NULL
+      median_groups <- NULL
       sd_groups <- NULL
       
       #calculate normality per group in comp
@@ -564,6 +593,7 @@ if(AMOUNT_OF_MULTIPLE_COMPARISONS >= 1){
         names_groups <- c(names_groups, nr)
         amount_groups <- c(amount_groups, length(y1))
         mean_groups <- c(mean_groups, format(round(mean(y1),digits=3),nsmall=3))
+        median_groups <- c(median_groups, format(round(median(y1),digits=3),nsmall=3))
         sd_groups <- c(sd_groups, format(round(sd(y1),digits=3),nsmall=3))
       }
       
@@ -571,6 +601,7 @@ if(AMOUNT_OF_MULTIPLE_COMPARISONS >= 1){
       names_groups <- paste(unlist(names_groups), collapse='; ')
       amount_groups <- paste(unlist(amount_groups), collapse='; ')
       mean_groups <- paste(unlist(mean_groups), collapse='; ')
+      median_groups <- paste(unlist(median_groups), collapse='; ')
       sd_groups <- paste(unlist(sd_groups), collapse='; ')
       
       
@@ -597,7 +628,7 @@ if(AMOUNT_OF_MULTIPLE_COMPARISONS >= 1){
         name_test <- "One-way ANOVA"
         
         #report ANOVA p-values for each multiple comparison and each variable (add here)
-        line_ <- paste(c(multiple_comparison, name_standard, name_test, names_groups, amount_groups, mean_groups, sd_groups, p_value), collapse = '\t')
+        line_ <- paste(c(multiple_comparison, name_standard, name_test, names_groups, amount_groups, mean_groups, median_groups, sd_groups, p_value), collapse = '\t')
         append_result_to_report(line_, name_report_ANOVA)
         
         
@@ -673,7 +704,7 @@ if(AMOUNT_OF_MULTIPLE_COMPARISONS >= 1){
         name_test <- unlist(kruskal_univar_comp$method)
         
         #report Kruskal p-values for each pairwise comparison and each variable (add here)
-        line_ <- paste(c(multiple_comparison, name_standard, name_test, names_groups, amount_groups, mean_groups, sd_groups, p_value), collapse='\t')
+        line_ <- paste(c(multiple_comparison, name_standard, name_test, names_groups, amount_groups, mean_groups, median_groups, sd_groups, p_value), collapse='\t')
         append_result_to_report(line_, name_report_ANOVA)
         
         if(is.na(p_value)){
@@ -697,7 +728,9 @@ if(AMOUNT_OF_MULTIPLE_COMPARISONS >= 1){
           #https://www.rdocumentation.org/packages/dunn.test/versions/1.3.5/topics/dunn.test
           library(dunn.test)
           invisible(capture.output({ #wo print output
-            post_test <- dunn.test(x=comp_variable$variable, g= comp_variable$comp, method = 'bh', altp = TRUE, alpha=0.05) 
+            if(length(sort(unique(comp))) >2){ #if run mcomp with 2 groups, run wo bh correction
+              post_test <- dunn.test(x=comp_variable$variable, g= comp_variable$comp, method = 'bh', altp = TRUE, alpha=0.05) 
+            }else(post_test <- dunn.test(x=comp_variable$variable, g= comp_variable$comp, alpha=0.05))
             #with Benjamini-Hochberg correction 
             #(why bh: with >>feat, takes into account nr of FDR
             #Bonferroni "punishes" all input p-values equally, whereas Benjamini-Hochberg (as a way to control the FDR) "punishes" p-values accordingly to their ranking. If you have few tests, it should not make too much of a difference, but if you have many tests (as for example when you test all 20,000 human protein coding genes or even larger sets), it will make a difference. In this case Bonferroni will produce false negatives, in other words it will discard significant observations. Therefore usually I use Benjamini-Hochberg.
@@ -708,7 +741,12 @@ if(AMOUNT_OF_MULTIPLE_COMPARISONS >= 1){
           linePH <- as.data.frame(post_test)
           linePH$multicomp <- multiple_comparison
           linePH$standard <- name_standard
+          if(length(sort(unique(comp))) == 2){ #if run mcomp with 2 groups, run wo bh correction
+            linePH$altP <- "No BH correction performed"
+            linePH$altP.adjusted <- "No BH correction performed"
+          }
           linePH <- linePH[ , c("multicomp", "standard", "comparisons", "chi2", "Z", "altP", "altP.adjusted")]     #reorer cols
+          
           append_dataframe_to_report(linePH, name_report_posthocDunn)
           
           #plot visual Dunn test Significant Differences 
@@ -728,8 +766,24 @@ if(AMOUNT_OF_MULTIPLE_COMPARISONS >= 1){
         }
       }
     }
-  }    
+    
+    ### Calc adj p-value
+    df <- read.table(name_report_ANOVA, header=TRUE, sep="\t") 
+    df <- df[df$Multiple.comparison == multiple_comparison,]
+    q <- p.adjust(df$p.value, method = "fdr")
+    q_values <- c(q_values, q)
+    
+  }  
+  
+  #### After all multiple comparisons done, write adj p-values to report
+  report_multiple <- read.table(name_report_ANOVA, header=TRUE, sep="\t")
+  report_multiple$Adjusted_p_value <- q_values
+  name_report_ANOVA2 <- paste(name_project,'_adjpvalues_MultipleComparisons.txt', sep="")
+  write_dataframe_as_txt_file(report_multiple, name_report_ANOVA2)
+  
 }
+
+
 
 ###################
 
