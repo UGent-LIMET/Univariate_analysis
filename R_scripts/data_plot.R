@@ -292,30 +292,112 @@ plot_heatmap_w_group <- function(data_melt){
     labs(x="SampleName", y="Variable", fill="Value") #1 funct for both comp/Mcomp
 }
 
-plot_duoboxplot <- function(samples_matrix_comp_no0) {
-  #https://statisticsglobe.com/boxplot-in-r
+plot_duoboxplot <- function(samples_matrix_comp_no0, logtr = FALSE) {
   
-  ggplot(samples_matrix_comp_no0, aes(x = comp, y = samples_matrix_comp_no0[,standard_nr], fill = comp)) +    # Create boxplot chart in ggplot2; 
-    geom_boxplot() +
-    labs(title="", #title=paste0("Boxplot comparison ", pairwise_comparison), 
-         x="Pairwise comparison", 
-         y=name_standard)+
-    scale_fill_brewer(type='seq',palette='Blues')+
-    theme_customgridbox()+
-    theme(legend.position="none") #no legend
+  # retain only complete cases
+  samples_matrix_comp_no0_standard <- samples_matrix_comp_no0[, standard_nr]
+  samples_matrix_comp_no0_standard <- samples_matrix_comp_no0_standard[complete.cases(samples_matrix_comp_no0_standard)]
+  comp_standard <-comp[complete.cases(samples_matrix_comp_no0[, standard_nr])]
+  df_boxplot <- data.frame(comp = comp_standard, obs = samples_matrix_comp_no0_standard)
+  
+  if(logtr){
+    if(all(unlist(COMP_NAME) != FALSE)){
+      ggplot(df_boxplot, aes(x = comp, y = log1p(obs), fill = comp)) + 
+        geom_boxplot() +
+        labs(title="", 
+             x="Pairwise comparison", 
+             y=paste0("log1p ", name_standard))+
+        scale_fill_brewer(type='seq',palette='Blues')+
+        theme_customgridbox()+
+        theme(legend.position="none")+ #no legend
+        scale_x_discrete(labels = bplabels)
+    } else {
+      ggplot(df_boxplot, aes(x = comp, y = log1p(obs), fill = comp)) + 
+        geom_boxplot() +
+        labs(title="",
+             x="Pairwise comparison", 
+             y=paste0("log1p ", name_standard))+
+        scale_fill_brewer(type='seq',palette='Blues')+
+        theme_customgridbox()+
+        theme(legend.position="none") #no legend
+    }
+  } else {
+    if(all(unlist(COMP_NAME) != FALSE)){
+      ggplot(df_boxplot, aes(x = comp, y = obs, fill = comp)) + 
+        geom_boxplot() +
+        labs(title="", 
+             x="Pairwise comparison", 
+             y=name_standard)+
+        scale_fill_brewer(type='seq',palette='Blues')+
+        theme_customgridbox()+
+        theme(legend.position="none")+ #no legend
+        scale_x_discrete(labels = bplabels)
+    } else {
+      ggplot(df_boxplot, aes(x = comp, y = obs, fill = comp)) + 
+        geom_boxplot() +
+        labs(title="", 
+             x="Pairwise comparison", 
+             y=name_standard)+
+        scale_fill_brewer(type='seq',palette='Blues')+
+        theme_customgridbox()+
+        theme(legend.position="none") #no legend
+    }  
+  }
+  
 }
 
-plot_multiboxplot <- function(samples_matrix_comp_no0) {
-  #https://statisticsglobe.com/boxplot-in-r
+plot_multiboxplot <- function(samples_matrix_comp_no0, logtr = FALSE) {
   
-  ggplot(samples_matrix_comp_no0, aes(x = comp, y = samples_matrix_comp_no0[,standard_nr], fill = comp)) +    # Create boxplot chart in ggplot2; 
-    geom_boxplot() +
-    labs(title="", #title=paste0("Boxplot multiple comparison ", multiple_comparison), 
-         x="Multiple comparison", 
-         y=name_standard)+
-    scale_fill_brewer(type='seq',palette='Blues')+
-    theme_customgridbox()+
-    theme(legend.position="none") #no legend
+  # retain only complete cases
+  samples_matrix_comp_no0_standard <- samples_matrix_comp_no0[, standard_nr]
+  samples_matrix_comp_no0_standard <- samples_matrix_comp_no0_standard[complete.cases(samples_matrix_comp_no0_standard)]
+  comp_standard <-comp[complete.cases(samples_matrix_comp_no0[, standard_nr])]
+  df_boxplot <- data.frame(comp = comp_standard, obs = samples_matrix_comp_no0_standard)
+  
+  if(logtr){
+    if(all(unlist(MULTCOMP_NAME) != FALSE)){
+      ggplot(df_boxplot, aes(x = comp, y = log1p(obs), fill = comp)) + 
+        geom_boxplot() +
+        labs(title="", 
+             x="Multiple comparison", 
+             y=paste0("log1p ", name_standard))+
+        scale_fill_brewer(type='seq',palette='Blues')+
+        theme_customgridbox()+
+        theme(legend.position="none")+ #no legend
+        scale_x_discrete(labels = bplabels)
+    } else {
+      ggplot(df_boxplot, aes(x = comp, y = log1p(obs), fill = comp)) + 
+        geom_boxplot() +
+        labs(title="", 
+             x="Multiple comparison", 
+             y=paste0("log1p ", name_standard))+
+        scale_fill_brewer(type='seq',palette='Blues')+
+        theme_customgridbox()+
+        theme(legend.position="none") #no legend
+    }
+  } else {
+    if(all(unlist(MULTCOMP_NAME) != FALSE)){
+      ggplot(df_boxplot, aes(x = comp, y = obs, fill = comp)) + 
+        geom_boxplot() +
+        labs(title="", 
+             x="Multiple comparison", 
+             y=name_standard)+
+        scale_fill_brewer(type='seq',palette='Blues')+
+        theme_customgridbox()+
+        theme(legend.position="none")+ #no legend
+        scale_x_discrete(labels = bplabels)
+    } else {
+      ggplot(df_boxplot, aes(x = comp, y = obs, fill = comp)) + 
+        geom_boxplot() +
+        labs(title="",
+             x="Multiple comparison", 
+             y=name_standard)+
+        scale_fill_brewer(type='seq',palette='Blues')+
+        theme_customgridbox()+
+        theme(legend.position="none") #no legend
+    }
+  }
+  
 }
 
 plot_volcano <- function(volcano_df){

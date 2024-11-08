@@ -15,7 +15,7 @@ DONT_RUN_CODE <- 'skip this part of the pipeline, keeps order: pre-processing - 
 
 ## Adjustments
 #Project name:
-EXPERIMENT <- 'Univariate_analysis' #structured and short, see READ_ME
+EXPERIMENT <- 'experimentname' #structured and short, see READ_ME
 POLARITY <- "both" #{"positive", "negative"} #needed this format for annotation to work
 # file_conversion and pre-processing need to be performed seperate
 # only choose "both" when no pre-processing needed (eg. merge both ionisationmodes)
@@ -23,7 +23,7 @@ USER_COMMENT <- "Tutorial comment" #Add info about experiment, eg. explain (Mult
 
 RUN_PART_UNIVARIATE <- RUN_CODE
 
-#
+
 #####################
 
 
@@ -39,20 +39,27 @@ if(RUN_PART_UNIVARIATE == RUN_CODE){
   
   ## Adjustments
   #If you choose 'VARIABLEMETADATA_EXTERN', add additional info here:
-  VARIABLEMETADATA_EXTERN <- 'VM_univariate.txt'  #'name.txt' of file. Ignore if file created from pipeline 
+  VARIABLEMETADATA_EXTERN <- 'VariableMetadata.txt'  #'name.txt' of file. Ignore if file created from pipeline 
   COLLUMN_NR_START_SAMPLES <- 21  #always 20 (auto and manual must be same format); unless extra col merged!
   
   #Source of variableMetadata:
   INPUT_VARIABLES <- VARIABLEMETADATA_EXTERN
   
   #input file2 sampleMetadata:
-  INPUT_SAMPLES <- 'SM_univariate.txt' #don't forget .txt
+  INPUT_SAMPLES <- 'SampleMetadata.txt' #don't forget .txt
   
-  COLLUMN_NR_LAST_BEFORE_COMPARISONS <- 14
-  AMOUNT_OF_COMPARISONS <- 2      #amount of pairwise comparisons, =0 if none
-  AMOUNT_OF_MULTIPLE_COMPARISONS <- 2       #amount of multiple comparisons, =0 if none present
+  COLLUMN_NR_LAST_BEFORE_COMPARISONS <- 8
+  AMOUNT_OF_COMPARISONS <- 1      #amount of pairwise comparisons, =0 if none
+  AMOUNT_OF_MULTIPLE_COMPARISONS <- 1       #amount of multiple comparisons, =0 if none present
   AMOUNT_OF_PROJECTIONS <- 0     #amount of PCAs (or alternative projection methods in future), =0 if none present
   
+  # if boxplots need to contain specific labels, set those here, one list entry
+  #   for each comparison
+  # if not, set COMP_NAME and/or MULTCOMP_NAME to FALSE
+  COMP_NAME <- FALSE
+  COMP_NAME <- list(c("Normal weight", "Overweight/obese"))
+  MULTCOMP_NAME <- FALSE
+  MULTCOMP_NAME <- list(c("Normal weight", "Overweight", "Obese"))
   
   #style
   SIZE_HEATMAP_YAXIS <- 5   #size lettertype for heatmap, depending on amount of variables. default: 5

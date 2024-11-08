@@ -40,11 +40,11 @@ load_variableMetadata <- function(INPUT_VARIABLES){
   # load samplelist from .txt file
   #todo!!!! need distribution min/max to work!!! add tests in read VM file
   variableMetadata <- read.table(INPUT_VARIABLES, header=TRUE, fill=T, sep="\t")
- 
+  
   stopifnot(class(variableMetadata$CompID)=="integer") #CompID are integers (eg. 1, 2, ..., n)
-  indx <- apply(variableMetadata[,COLLUMN_NR_START_SAMPLES:ncol(variableMetadata)], 2, function(x) any(is.na(x) | is.infinite(x) | is.numeric(x)))
-  stopifnot(TRUE %in% indx == TRUE) #intensities variables are float numbers with decimal (eg. 1000000.00), no NA/inf/"1,000,000" values
-  stopifnot(min(variableMetadata[,COLLUMN_NR_START_SAMPLES:ncol(variableMetadata)]) >= 0) #no negative or empty numbers allowed
+  indx <- apply(variableMetadata[,COLLUMN_NR_START_SAMPLES:ncol(variableMetadata)], 2, function(x) any(is.infinite(x) | is.numeric(x)))
+  stopifnot(TRUE %in% indx == TRUE) #intensities variables are float numbers with decimal (eg. 1000000.00), noinf/"1,000,000" values
+  #stopifnot(min(variableMetadata[,COLLUMN_NR_START_SAMPLES:ncol(variableMetadata)]) >= 0) #no negative or empty numbers allowed
   
   stopifnot("CompID" %in% colnames(variableMetadata))
   stopifnot("MZ" %in% colnames(variableMetadata))
@@ -82,7 +82,7 @@ load_targetedMetadata <- function(INPUT_STANDARDS){
   stopifnot("IonisationMode" %in% colnames(targetedMetadata)) 
   stopifnot("MZ" %in% colnames(targetedMetadata))
   stopifnot("Time" %in% colnames(targetedMetadata)) #need 1 time (can have others in next cols as well and this col = average)
-
+  
   #MZ numeric 
   indx <- any(is.na(targetedMetadata$MZ) | is.infinite(targetedMetadata$MZ) | is.numeric(targetedMetadata$MZ))
   stopifnot(TRUE %in% indx == TRUE) #intensities variables are float numbers with decimal (eg. 1000000.00), no NA/inf/"1,000,000" values
@@ -179,7 +179,7 @@ load_variableMetadata_other <- function(INPUT_VARIABLES, COLLUMN_NR_START_SAMPLE
   #stopifnot(min(variableMetadata[,COLLUMN_NR_START_SAMPLES:ncol(variableMetadata)]) >= 0) #no negative or empty numbers allowed
   
   stopifnot("CompID" %in% colnames(variableMetadata))
-
+  
   min_samples <- 2
   stopifnot(nrow(variableMetadata) >= min_samples) #more then 10 samples in analysis
   

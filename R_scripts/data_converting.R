@@ -6,6 +6,8 @@ merge_accoding_to_SampleName <- function(df1, df2) {
   df2 <- df2[order(df2$SampleName),]
 
   stopifnot(nrow(df1) == nrow(df2))
+  stopifnot(df1$SampleName == df2$SampleName)
+  
   mergeddf <- merge(df1, df2, by="SampleName", all = T, sort=F)
 
 return(mergeddf)

@@ -82,52 +82,57 @@ colnames(samples_matrix) <- variableMetadata$MetaboliteName
 ## heatmap plot with minimal distance
 #https://stackoverflow.com/questions/25528059/cluster-data-in-heat-map-in-r-ggplot
 #clustering samples (rows) order
-ord <- hclust(dist(samples_matrix))$order #info about order in object ord$order
-#default clustering: Cluster method: complete; Distance: euclidean see doc: https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/hclust
-#ord
-dendrogram <-as.dendrogram(hclust(dist(samples_matrix)))
-png(paste(name_project, "_dendogram_clust", ".png", sep=""), width=10, height=5, units="in", res=300)
-par(cex=.2)
-plot(dendrogram)
-dev.off()
-
-#2nd clustering for the variables (not used on HM)
-dendrogram2 <-as.dendrogram(hclust(dist(t(samples_matrix))))
-png(paste(name_project, "_dendogram_clust_variables", ".png", sep=""), width=7, height=5, units="in", res=150)
-par(cex=.5)
-plot(dendrogram2)
-dev.off()
-
-#long format for ggplot
-library("reshape") 
-samples_matrix$SampleName <- rownames(samples_matrix) #depending on which name (system or nic name), as chosen above
-data_melt <- melt(samples_matrix, id = c("SampleName")) 
-
-#info from dendogram, for order in ggplot
-comp_names2 <- NULL
-comp_names2$SampleName <- rownames(samples_matrix) #idem accoding to name chosen above
-comp_names2 <- data.frame(comp_names2)
-comp_names2$ord <- ord
-
-#merge info long format + order clustering accoding to name chosen above
-data_melt <- merge(data_melt, comp_names2, by = "SampleName")
-data_melt$order_plot <- data_melt$ord #replace order according to dist
-data_melt$order_plot <- as.numeric(data_melt$order_plot)
-
-#factor in order of hdist clustering to SampleName, see in plot function
-#plot using info clust
-heatmap_hclust <- plot_heatmap_hclust(data_melt)
-ggsave(filename = paste(name_project, "_heatmap_clust", ".png", sep=""), heatmap_hclust, width = 7, height = 7, dpi = 300)
-ggsave(filename = paste(name_project, "_heatmap_clust", ".pdf", sep=""), heatmap_hclust, width = 7, height = 7, dpi = 300)
-
-#log heatmap based on hierarchical clustering (only on 1 comparison)
-data_melt_log <- data_melt
-data_melt_log$value <- log10(data_melt$value + 1) #log10(x+1)
-
-heatmap_hclust <- plot_heatmap_hclust(data_melt_log)
-ggsave(filename = paste(name_project, "_heatmap_clust", "LOG.png", sep=""), heatmap_hclust, width = 7, height = 7, dpi = 300)
-ggsave(filename = paste(name_project, "_heatmap_clust", "LOG.pdf", sep=""), heatmap_hclust, width = 7, height = 7, dpi = 300)
-
+if(sum(is.na(samples_matrix)) == 0){
+  ord <- hclust(dist(samples_matrix))$order #info about order in object ord$order
+  #default clustering: Cluster method: complete; Distance: euclidean see doc: https://www.rdocumentation.org/packages/stats/versions/3.6.2/topics/hclust
+  #ord
+  dendrogram <-as.dendrogram(hclust(dist(samples_matrix)))
+  png(paste(name_project, "_dendogram_clust", ".png", sep=""), width=10, height=5, units="in", res=300)
+  par(cex=.2)
+  plot(dendrogram)
+  dev.off()
+  
+  #2nd clustering for the variables (not used on HM)
+  dendrogram2 <-as.dendrogram(hclust(dist(t(samples_matrix))))
+  png(paste(name_project, "_dendogram_clust_variables", ".png", sep=""), width=7, height=5, units="in", res=150)
+  par(cex=.5)
+  plot(dendrogram2)
+  dev.off()
+  
+  #long format for ggplot
+  library("reshape") 
+  samples_matrix$SampleName <- rownames(samples_matrix) #depending on which name (system or nic name), as chosen above
+  data_melt <- melt(samples_matrix, id = c("SampleName")) 
+  
+  #info from dendogram, for order in ggplot
+  comp_names2 <- NULL
+  comp_names2$SampleName <- rownames(samples_matrix) #idem accoding to name chosen above
+  comp_names2 <- data.frame(comp_names2)
+  comp_names2$ord <- ord
+  
+  #merge info long format + order clustering accoding to name chosen above
+  data_melt <- merge(data_melt, comp_names2, by = "SampleName")
+  data_melt$order_plot <- data_melt$ord #replace order according to dist
+  data_melt$order_plot <- as.numeric(data_melt$order_plot)
+  
+  #factor in order of hdist clustering to SampleName, see in plot function
+  #plot using info clust
+  heatmap_hclust <- plot_heatmap_hclust(data_melt)
+  ggsave(filename = paste(name_project, "_heatmap_clust", ".png", sep=""), heatmap_hclust, width = 7, height = 7, dpi = 300)
+  ggsave(filename = paste(name_project, "_heatmap_clust", ".pdf", sep=""), heatmap_hclust, width = 7, height = 7, dpi = 300)
+  
+  #log heatmap based on hierarchical clustering (only on 1 comparison)
+  data_melt_log <- data_melt
+  data_melt_log$value <- log10(data_melt$value + 1) #log10(x+1)
+  
+  heatmap_hclust <- plot_heatmap_hclust(data_melt_log)
+  ggsave(filename = paste(name_project, "_heatmap_clust", "LOG.png", sep=""), heatmap_hclust, width = 7, height = 7, dpi = 300)
+  ggsave(filename = paste(name_project, "_heatmap_clust", "LOG.pdf", sep=""), heatmap_hclust, width = 7, height = 7, dpi = 300)
+  
+  
+} else {
+  warning("NAs in dataset: cannot perform clustering with missing data and no clustering/heatmaps will be generated")
+}
 
 
 ########## univariate analysis comparison ##########
@@ -144,9 +149,13 @@ q_values <- NULL #adjusted p-value, calculated per comparison but written to rep
 if(AMOUNT_OF_COMPARISONS >= 1){
   for(pairwise_comparison in 1:AMOUNT_OF_COMPARISONS){
     
+    # get comparison names for boxplot, if any
+    if(all(unlist(COMP_NAME) != FALSE)){
+      bplabels <- COMP_NAME[[pairwise_comparison]]
+    }
+    
     #pairwise_comparison <- 1 #for testing
     print(paste("start calculation comparison ", pairwise_comparison, sep=""))
-    
     
     ### prepare matrix    
     comp_ <- nsamples_metadata[,COLLUMN_NR_COMPARISON1+pairwise_comparison-1]
@@ -157,78 +166,82 @@ if(AMOUNT_OF_COMPARISONS >= 1){
     samples_matrix_comp <- from_df_to_matrix(samples_metadata_comp)
     variable.names2 <- variableMetadata$MetaboliteName 
 
-    #make sure no NAs present in matrix  
+    #make sure no NaNs present in matrix  
     samples_matrix_comp_no0 <- data.frame(sapply(samples_matrix_comp, function(x) ifelse(is.nan(x), NA, x))) #NAN -> NA
     samples_matrix_comp_no0 <- samples_matrix_comp_no0[,which(unlist(lapply(samples_matrix_comp_no0, function(x)!all(is.na(x)))))] #del variables with all 0's
     colnames(samples_matrix_comp_no0) <- variable.names2 #no 'x', "."
     
     #remove if all values are 0 for each metabolite
-    samples_matrix_comp_no0 <- samples_matrix_comp_no0[,apply(samples_matrix_comp_no0, 2, function(x) sum(x) != 0)]
+    samples_matrix_comp_no0 <- samples_matrix_comp_no0[,apply(samples_matrix_comp_no0, 2, function(x) sum(x, na.rm = TRUE) != 0)]
     
     comp <- as.factor(samples_metadata_comp[,COLLUMN_NR_COMPARISON1+pairwise_comparison-1])
     
     
-    
-    ### Heat maps (ggplot)
-    
-    #wo transpose for ggplot heatmap:
-    Tsamples_matrix_comp_no0_selection <- samples_matrix_comp_no0 #matrix with comp retained, <lod as NA and colnames = standards
-    
-    # add names from samples and variables (nice name if present)
-    if("Name" %in% colnames(samples_metadata_comp)){ 		#if alternative name for samples exists, use these on heat map
-      rownames(Tsamples_matrix_comp_no0_selection) <- samples_metadata_comp$Name
-    }else(rownames(Tsamples_matrix_comp_no0_selection) <- samples_metadata_comp$SampleName)
-    colnames(Tsamples_matrix_comp_no0_selection) <- colnames(samples_matrix_comp_no0)
-    
-    
-    library("reshape") 
-    #head(Tsamples_matrix_comp_no0_selection)
-    Tsamples_matrix_comp_no0_selection$SampleName <- rownames(Tsamples_matrix_comp_no0_selection)
-    data_melt <- melt(Tsamples_matrix_comp_no0_selection, id = c("SampleName")) 
-    
-    #write copy for 'manual' editing
-    name_df <- paste(name_project,'_TableHeatMap_comparison', pairwise_comparison, '.txt', sep="")
-    write_dataframe_as_txt_file(Tsamples_matrix_comp_no0_selection, name_df) #samplenames present in last column
-    
-    
-    #order accord to group for heatmap in ggplot
-    comp <- as.character(samples_metadata_comp[,COLLUMN_NR_COMPARISON1+pairwise_comparison-1])
-
-    if("Name" %in% colnames(samples_metadata_comp)){ 		#if alternative name for samples exists, use these on heat map
-      sn <- as.character(samples_metadata_comp$Name)
-    }else(sn <- as.character(samples_metadata_comp$SampleName))
-    comp_names <- as.data.frame(cbind(sn, comp))
-    comp_names <- comp_names[order(comp_names$comp, decreasing = FALSE),]
-    SampleName_reorder <- comp_names$sn #variable needed for ggplot correct order samplenames
-    SampleName_reorder <- as.character(SampleName_reorder)
-
-    comp_names$SampleName <- comp_names$sn #no SampleName as variable, but with this name for merge
-    comp_names$SampleName <- as.character(comp_names$SampleName)
-    comp_names$order_plot <- c(1:(nrow(comp_names))) #for correct HM order!! must start w 1 or shift
-    
-    data_melt <- merge(data_melt, comp_names, by = "SampleName")
-    #data_melt$order_plot <- as.numeric(data_melt$order_plot) #ipv int?
-    
-    
-    #heatmap plot with grouping comparison above on plot
-    heatmap_comp <- plot_heatmap_w_group(data_melt)
-    ggsave(filename = paste(name_project, "_heatmap_group_comparison" , pairwise_comparison, ".png", sep=""), heatmap_comp, width = 7, height = 7, dpi = 300)
-    ggsave(filename = paste(name_project, "_heatmap_group_comparison" , pairwise_comparison, ".pdf", sep=""), heatmap_comp, width = 7, height = 7, dpi = 300)
-    
-    
-    ##log heatmap plot
-    data_melt_log <- data_melt
-    data_melt_log$value <- log10(data_melt$value + 1) #log10(x+1)
-    
-    heatmap_comp <- plot_heatmap_w_group(data_melt_log)
-    ggsave(filename = paste(name_project, "_heatmap_group_comparison" , pairwise_comparison, "LOG.png", sep=""), heatmap_comp, width = 7, height = 7, dpi = 300)
-    ggsave(filename = paste(name_project, "_heatmap_group_comparison" , pairwise_comparison, "LOG.pdf", sep=""), heatmap_comp, width = 7, height = 7, dpi = 300)
-    
-    
-    
-    ### Boxplots for each variable 
-    #https://statisticsglobe.com/boxplot-in-r
-    #Boxplots are a popular type of graphic that visualize the minimum non-outlier, the first quartile, the median, the third quartile, and the maximum non-outlier of numeric data in a single plot
+    if(sum(is.na(samples_matrix)) == 0){
+      
+      ### Heat maps (ggplot)
+      
+      #wo transpose for ggplot heatmap:
+      Tsamples_matrix_comp_no0_selection <- samples_matrix_comp_no0 #matrix with comp retained, <lod as NA and colnames = standards
+      
+      # add names from samples and variables (nice name if present)
+      if("Name" %in% colnames(samples_metadata_comp)){ 		#if alternative name for samples exists, use these on heat map
+        rownames(Tsamples_matrix_comp_no0_selection) <- samples_metadata_comp$Name
+      }else(rownames(Tsamples_matrix_comp_no0_selection) <- samples_metadata_comp$SampleName)
+      colnames(Tsamples_matrix_comp_no0_selection) <- colnames(samples_matrix_comp_no0)
+      
+      
+      library("reshape") 
+      #head(Tsamples_matrix_comp_no0_selection)
+      Tsamples_matrix_comp_no0_selection$SampleName <- rownames(Tsamples_matrix_comp_no0_selection)
+      data_melt <- melt(Tsamples_matrix_comp_no0_selection, id = c("SampleName")) 
+      
+      #write copy for 'manual' editing
+      name_df <- paste(name_project,'_TableHeatMap_comparison', pairwise_comparison, '.txt', sep="")
+      write_dataframe_as_txt_file(Tsamples_matrix_comp_no0_selection, name_df) #samplenames present in last column
+      
+      
+      #order accord to group for heatmap in ggplot
+      comp <- as.character(samples_metadata_comp[,COLLUMN_NR_COMPARISON1+pairwise_comparison-1])
+  
+      if("Name" %in% colnames(samples_metadata_comp)){ 		#if alternative name for samples exists, use these on heat map
+        sn <- as.character(samples_metadata_comp$Name)
+      }else(sn <- as.character(samples_metadata_comp$SampleName))
+      comp_names <- as.data.frame(cbind(sn, comp))
+      comp_names <- comp_names[order(comp_names$comp, decreasing = FALSE),]
+      SampleName_reorder <- comp_names$sn #variable needed for ggplot correct order samplenames
+      SampleName_reorder <- as.character(SampleName_reorder)
+  
+      comp_names$SampleName <- comp_names$sn #no SampleName as variable, but with this name for merge
+      comp_names$SampleName <- as.character(comp_names$SampleName)
+      comp_names$order_plot <- c(1:(nrow(comp_names))) #for correct HM order!! must start w 1 or shift
+      
+      data_melt <- merge(data_melt, comp_names, by = "SampleName")
+      #data_melt$order_plot <- as.numeric(data_melt$order_plot) #ipv int?
+      
+      
+      #heatmap plot with grouping comparison above on plot
+      heatmap_comp <- plot_heatmap_w_group(data_melt)
+      ggsave(filename = paste(name_project, "_heatmap_group_comparison" , pairwise_comparison, ".png", sep=""), heatmap_comp, width = 7, height = 7, dpi = 300)
+      ggsave(filename = paste(name_project, "_heatmap_group_comparison" , pairwise_comparison, ".pdf", sep=""), heatmap_comp, width = 7, height = 7, dpi = 300)
+      
+      
+      ##log heatmap plot
+      data_melt_log <- data_melt
+      data_melt_log$value <- log10(data_melt$value + 1) #log10(x+1)
+      
+      heatmap_comp <- plot_heatmap_w_group(data_melt_log)
+      ggsave(filename = paste(name_project, "_heatmap_group_comparison" , pairwise_comparison, "LOG.png", sep=""), heatmap_comp, width = 7, height = 7, dpi = 300)
+      ggsave(filename = paste(name_project, "_heatmap_group_comparison" , pairwise_comparison, "LOG.pdf", sep=""), heatmap_comp, width = 7, height = 7, dpi = 300)
+      
+      
+      
+      ### Boxplots for each variable 
+      #https://statisticsglobe.com/boxplot-in-r
+      #Boxplots are a popular type of graphic that visualize the minimum non-outlier, the first quartile, the median, the third quartile, and the maximum non-outlier of numeric data in a single plot
+    } else {
+      warning("NAs in dataset: cannot perform clustering with missing data and no clustering/heatmaps will be generated")
+    }
     
     standards <- ncol(samples_matrix_comp_no0)
     for(standard_nr in 1:standards){
@@ -246,6 +259,7 @@ if(AMOUNT_OF_COMPARISONS >= 1){
       
       ## check normality for each group in comparison
       comp_variable <- cbind(samples_matrix_comp_no0[standard_nr], comp)
+      comp_variable <- comp_variable[complete.cases((comp_variable)),]
       colnames(comp_variable) <- c("variable", "comp")
       
       #also from here extract addit info for table
@@ -293,9 +307,9 @@ if(AMOUNT_OF_COMPARISONS >= 1){
         #add info per group
         names_groups <- c(names_groups, nr)
         amount_groups <- c(amount_groups, length(y1))
-        mean_groups <- c(mean_groups, format(round(mean(y1),digits=3),nsmall=3))
-        median_groups <- c(median_groups, format(round(median(y1),digits=3),nsmall=3))
-        sd_groups <- c(sd_groups, format(round(sd(y1),digits=3),nsmall=3))
+        mean_groups <- c(mean_groups, format(round(mean(y1, na.rm = TRUE),digits=3),nsmall=3))
+        median_groups <- c(median_groups, format(round(median(y1, na.rm = TRUE),digits=3),nsmall=3))
+        sd_groups <- c(sd_groups, format(round(sd(y1, na.rm = TRUE),digits=3),nsmall=3))
       }
       
       #info in 1 output cell
@@ -313,7 +327,10 @@ if(AMOUNT_OF_COMPARISONS >= 1){
       y2 <- comp_variable[comp_variable$comp == sort(unique(comp))[2],]   #group "+1"
       y2 <- y2[,1]
       
-      
+      # make boxplots
+      boxplot_comp <- plot_duoboxplot(samples_matrix_comp_no0)
+      boxplot_comp_log <- plot_duoboxplot(samples_matrix_comp_no0, logtr = TRUE)
+
     
       ## ttest if normal distribution OK
       if(all(normality_variables >= 0.05)){
@@ -339,17 +356,21 @@ if(AMOUNT_OF_COMPARISONS >= 1){
           #actually not needed anymore since rm from matrix_no_0 but leave in code
         }
         if(p_value < 0.05){
-          boxplot_comp <- plot_duoboxplot(samples_matrix_comp_no0)
-          
           png(paste(name_project, "_boxplot_comp" , pairwise_comparison, "_std_", name_standardWOsymbol, "_SIGNIF.png", sep=""), width=7, height=5, units="in", res=150)
           plot(boxplot_comp)
           dev.off()
+          
+          png(paste(name_project, "_boxplot_comp" , pairwise_comparison, "_std_", name_standardWOsymbol, "_log_SIGNIF.png", sep=""), width=7, height=5, units="in", res=150)
+          plot(boxplot_comp_log)
+          dev.off()
         }
         if(p_value >= 0.05){
-          ## boxplots also NS stds plot
-          boxplot_comp <- plot_duoboxplot(samples_matrix_comp_no0)
           png(paste(name_project, "_boxplot_comp" , pairwise_comparison, "_std_", name_standardWOsymbol, "_NS.png", sep=""), width=7, height=5, units="in", res=150)
           plot(boxplot_comp)
+          dev.off()
+          
+          png(paste(name_project, "_boxplot_comp" , pairwise_comparison, "_std_", name_standardWOsymbol, "_log_NS.png", sep=""), width=7, height=5, units="in", res=150)
+          plot(boxplot_comp_log)
           dev.off()
         }
       }
@@ -378,22 +399,26 @@ if(AMOUNT_OF_COMPARISONS >= 1){
           #actually not needed anymore since rm from matrix_no_0 but leave in code
         }
         if(p_value < 0.05){
-          boxplot_comp <- plot_duoboxplot(samples_matrix_comp_no0)
-          
           png(paste(name_project, "_boxplot_comp" , pairwise_comparison, "_std_", name_standardWOsymbol, "_SIGNIF.png", sep=""), width=7, height=5, units="in", res=150)
           plot(boxplot_comp)
           dev.off()
+          
+          png(paste(name_project, "_boxplot_comp" , pairwise_comparison, "_std_", name_standardWOsymbol, "_log_SIGNIF.png", sep=""), width=7, height=5, units="in", res=150)
+          plot(boxplot_comp_log)
+          dev.off()
         }
         if(p_value >= 0.05){
-          ## boxplots also NS stds plot
-          boxplot_comp <- plot_duoboxplot(samples_matrix_comp_no0)
           png(paste(name_project, "_boxplot_comp" , pairwise_comparison, "_std_", name_standardWOsymbol, "_NS.png", sep=""), width=7, height=5, units="in", res=150)
           plot(boxplot_comp)
+          dev.off()
+          
+          png(paste(name_project, "_boxplot_comp" , pairwise_comparison, "_std_", name_standardWOsymbol, "_log_NS.png", sep=""), width=7, height=5, units="in", res=150)
+          plot(boxplot_comp_log)
           dev.off()
         }
       }
     }
-    
+
     ### Volcano plot (using mean ratio fold change) + calc adj p-value
     volcano_df <- read.table(name_report_ttest, header=TRUE, sep="\t") 
     volcano_df <- volcano_df[volcano_df$Pairwise.comparison == pairwise_comparison,]
@@ -407,7 +432,6 @@ if(AMOUNT_OF_COMPARISONS >= 1){
     dev.off() 
     
   }
-  
   #### After all pairwise comparisons done, write adj p-values to report
   report_pairwise <- read.table(name_report_ttest, header=TRUE, sep="\t")
   report_pairwise$Adjusted_p_value <- q_values
@@ -452,6 +476,12 @@ if(AMOUNT_OF_MULTIPLE_COMPARISONS >= 1){
     
     print(paste("start calculation multiple comparison ", multiple_comparison, sep=""))
     
+    
+    # get comparison names for boxplot, if any
+    if(all(unlist(MULTCOMP_NAME) != FALSE)){
+      bplabels <- MULTCOMP_NAME[[multiple_comparison]]
+    }
+    
     ### remove non-essential data for comparison
     #remove samples that are not included in comp (Na instead of 0/1)
  
@@ -463,71 +493,74 @@ if(AMOUNT_OF_MULTIPLE_COMPARISONS >= 1){
     samples_matrix_comp <- from_df_to_matrix(samples_metadata_comp)
     variable.names2 <- variableMetadata$MetaboliteName 
     
-    #make sure no NAs present in matrix  
+    #make sure no NaNs present in matrix  
     samples_matrix_comp_no0 <- data.frame(sapply(samples_matrix_comp, function(x) ifelse(is.nan(x), NA, x))) #NAN -> NA
     samples_matrix_comp_no0 <- samples_matrix_comp_no0[,which(unlist(lapply(samples_matrix_comp_no0, function(x)!all(is.na(x)))))] #del variables with all 0's
     colnames(samples_matrix_comp_no0) <- variable.names2 #no 'x', "."
     
     #remove if all values are 0 for each metabolite
-    samples_matrix_comp_no0 <- samples_matrix_comp_no0[,apply(samples_matrix_comp_no0, 2, function(x) sum(x) != 0)]
+    samples_matrix_comp_no0 <- samples_matrix_comp_no0[,apply(samples_matrix_comp_no0, 2, function(x) sum(x, na.rm = TRUE) != 0)]
     
     comp <- as.factor(samples_metadata_comp[,COLLUMN_NR_MULTIPLE_COMPARISON1+multiple_comparison-1])
     
     
+    if(sum(is.na(samples_matrix)) == 0){
+      
+      ### Heat maps (ggplot)
+      #wo transpose for ggplot heatmap:
+      Tsamples_matrix_comp_no0_selection <- samples_matrix_comp_no0 #matrix with comp retained, <lod as NA and colnames = standards
+      
+      # add names from samples and variables (nice name if present)
+      if("Name" %in% colnames(samples_metadata_comp)){ 		#if alternative name for samples exists, use these on heat map
+        rownames(Tsamples_matrix_comp_no0_selection) <- samples_metadata_comp$Name
+      }else(rownames(Tsamples_matrix_comp_no0_selection) <- samples_metadata_comp$SampleName)
+      colnames(Tsamples_matrix_comp_no0_selection) <- colnames(samples_matrix_comp_no0)
+      
+      
+      library("reshape") 
+      #head(Tsamples_matrix_comp_no0_selection)
+      Tsamples_matrix_comp_no0_selection$SampleName <- rownames(Tsamples_matrix_comp_no0_selection)
+      data_melt <- melt(Tsamples_matrix_comp_no0_selection, id = c("SampleName")) 
+      
+      #write copy for 'manual' editing
+      name_df <- paste(name_project,'_TableHeatMap_Mcomparison', multiple_comparison, '.txt', sep="")
+      write_dataframe_as_txt_file(Tsamples_matrix_comp_no0_selection, name_df) #samplenames present in last column
+      
+      
+      #order accord to group for heatmap in ggplot
+      comp <- as.character(samples_metadata_comp[,COLLUMN_NR_MULTIPLE_COMPARISON1+multiple_comparison-1])
+      
+      if("Name" %in% colnames(samples_metadata_comp)){ 		#if alternative name for samples exists, use these on heat map
+        sn <- as.character(samples_metadata_comp$Name)
+      }else(sn <- as.character(samples_metadata_comp$SampleName))
+      comp_names <- as.data.frame(cbind(sn, comp))
+      comp_names <- comp_names[order(comp_names$comp, decreasing = FALSE),]
+      SampleName_reorder <- comp_names$sn #variable needed for ggplot correct order samplenames
+      SampleName_reorder <- as.character(SampleName_reorder)
+      
+      comp_names$SampleName <- comp_names$sn #no SampleName as variable, but with this name for merge
+      comp_names$SampleName <- as.character(comp_names$SampleName)
+      comp_names$order_plot <- c(1:(nrow(comp_names))) #for correct HM order!! must start w 1 or shift
+      
+      data_melt <- merge(data_melt, comp_names, by = "SampleName")
+      
+      ## heatmap according to group
+      heatmap_comp <- plot_heatmap_w_group(data_melt)
+      ggsave(filename = paste(name_project, "_heatmap_group_Mcomparison" , multiple_comparison, ".png", sep=""), heatmap_comp, width = 7, height = 7, dpi = 300)
+      ggsave(filename = paste(name_project, "_heatmap_group_Mcomparison" , multiple_comparison, ".pdf", sep=""), heatmap_comp, width = 7, height = 7, dpi = 300)
+      
+      ##log heatmaps plots
+      data_melt_log <- data_melt
+      data_melt_log$value <- log10(data_melt$value +1) #log10(x +1)
+      
+      heatmap_comp <- plot_heatmap_w_group(data_melt_log)
+      ggsave(filename = paste(name_project, "_heatmap_group_Mcomparison" , multiple_comparison, "LOG.png", sep=""), heatmap_comp, width = 7, height = 7, dpi = 300)
+      ggsave(filename = paste(name_project, "_heatmap_group_Mcomparison" , multiple_comparison, "LOG.pdf", sep=""), heatmap_comp, width = 7, height = 7, dpi = 300)
+      
     
-    ### Heat maps (ggplot)
-    #wo transpose for ggplot heatmap:
-    Tsamples_matrix_comp_no0_selection <- samples_matrix_comp_no0 #matrix with comp retained, <lod as NA and colnames = standards
-    
-    # add names from samples and variables (nice name if present)
-    if("Name" %in% colnames(samples_metadata_comp)){ 		#if alternative name for samples exists, use these on heat map
-      rownames(Tsamples_matrix_comp_no0_selection) <- samples_metadata_comp$Name
-    }else(rownames(Tsamples_matrix_comp_no0_selection) <- samples_metadata_comp$SampleName)
-    colnames(Tsamples_matrix_comp_no0_selection) <- colnames(samples_matrix_comp_no0)
-    
-    
-    library("reshape") 
-    #head(Tsamples_matrix_comp_no0_selection)
-    Tsamples_matrix_comp_no0_selection$SampleName <- rownames(Tsamples_matrix_comp_no0_selection)
-    data_melt <- melt(Tsamples_matrix_comp_no0_selection, id = c("SampleName")) 
-    
-    #write copy for 'manual' editing
-    name_df <- paste(name_project,'_TableHeatMap_Mcomparison', multiple_comparison, '.txt', sep="")
-    write_dataframe_as_txt_file(Tsamples_matrix_comp_no0_selection, name_df) #samplenames present in last column
-    
-    
-    #order accord to group for heatmap in ggplot
-    comp <- as.character(samples_metadata_comp[,COLLUMN_NR_MULTIPLE_COMPARISON1+multiple_comparison-1])
-    
-    if("Name" %in% colnames(samples_metadata_comp)){ 		#if alternative name for samples exists, use these on heat map
-      sn <- as.character(samples_metadata_comp$Name)
-    }else(sn <- as.character(samples_metadata_comp$SampleName))
-    comp_names <- as.data.frame(cbind(sn, comp))
-    comp_names <- comp_names[order(comp_names$comp, decreasing = FALSE),]
-    SampleName_reorder <- comp_names$sn #variable needed for ggplot correct order samplenames
-    SampleName_reorder <- as.character(SampleName_reorder)
-    
-    comp_names$SampleName <- comp_names$sn #no SampleName as variable, but with this name for merge
-    comp_names$SampleName <- as.character(comp_names$SampleName)
-    comp_names$order_plot <- c(1:(nrow(comp_names))) #for correct HM order!! must start w 1 or shift
-    
-    data_melt <- merge(data_melt, comp_names, by = "SampleName")
-    
-    ## heatmap according to group
-    heatmap_comp <- plot_heatmap_w_group(data_melt)
-    ggsave(filename = paste(name_project, "_heatmap_group_Mcomparison" , multiple_comparison, ".png", sep=""), heatmap_comp, width = 7, height = 7, dpi = 300)
-    ggsave(filename = paste(name_project, "_heatmap_group_Mcomparison" , multiple_comparison, ".pdf", sep=""), heatmap_comp, width = 7, height = 7, dpi = 300)
-    
-    ##log heatmaps plots
-    data_melt_log <- data_melt
-    data_melt_log$value <- log10(data_melt$value +1) #log10(x +1)
-    
-    heatmap_comp <- plot_heatmap_w_group(data_melt_log)
-    ggsave(filename = paste(name_project, "_heatmap_group_Mcomparison" , multiple_comparison, "LOG.png", sep=""), heatmap_comp, width = 7, height = 7, dpi = 300)
-    ggsave(filename = paste(name_project, "_heatmap_group_Mcomparison" , multiple_comparison, "LOG.pdf", sep=""), heatmap_comp, width = 7, height = 7, dpi = 300)
-    
-    
-
+    } else {
+      warning("NAs in dataset: cannot perform clustering with missing data and no clustering/heatmaps will be generated")
+    }
     
     ## Boxplot for each variable 
     #https://statisticsglobe.com/boxplot-in-r
@@ -592,9 +625,9 @@ if(AMOUNT_OF_MULTIPLE_COMPARISONS >= 1){
         #add info per group
         names_groups <- c(names_groups, nr)
         amount_groups <- c(amount_groups, length(y1))
-        mean_groups <- c(mean_groups, format(round(mean(y1),digits=3),nsmall=3))
-        median_groups <- c(median_groups, format(round(median(y1),digits=3),nsmall=3))
-        sd_groups <- c(sd_groups, format(round(sd(y1),digits=3),nsmall=3))
+        mean_groups <- c(mean_groups, format(round(mean(y1, na.rm = TRUE),digits=3),nsmall=3))
+        median_groups <- c(median_groups, format(round(median(y1, na.rm = TRUE),digits=3),nsmall=3))
+        sd_groups <- c(sd_groups, format(round(sd(y1, na.rm = TRUE),digits=3),nsmall=3))
       }
       
       #info in 1 output cell
@@ -647,15 +680,12 @@ if(AMOUNT_OF_MULTIPLE_COMPARISONS >= 1){
           plot(boxplot_comp)
           dev.off()
           
+          boxplot_comp_log <- plot_multiboxplot(samples_matrix_comp_no0, logtr = TRUE)
           
-          ##post-hoc test 
-          #  => to retrieve which group is responsible for sign diff ANOVA
-          #  https://www.r-bloggers.com/2020/10/anova-in-r/
-          #  https://www.rdocumentation.org/packages/stats/versions/3.3/topics/TukeyHSD
-          #  https://www.r-bloggers.com/2018/09/tukeys-test-for-post-hoc-analysis/
-          #  use Tukey HSD test => is used to compare all groups to each other (so all possible comparisons of 2 groups), 
-          #  because in pipeline no info 'ref' group to compare against (e.g. Dunnett's test)
-          
+          png(paste(name_project, "_boxplot_Mcomp" , multiple_comparison, "_std ", name_standardWOsymbol, "_log_SIGNIF.png", sep=""), width=7, height=5, units="in", res=150)
+          plot(boxplot_comp_log)
+          dev.off()
+    
           # Tukey HSD test:
           post_test <- TukeyHSD(x=model, which="comp", ordered = FALSE, conf.level = 0.95)
           
@@ -684,6 +714,12 @@ if(AMOUNT_OF_MULTIPLE_COMPARISONS >= 1){
           png(paste(name_project, "_boxplot_Mcomp" , multiple_comparison, "_std_", name_standardWOsymbol, "_NS.png", sep=""), width=7, height=5, units="in", res=150)
           plot(boxplot_comp)
           dev.off()
+          
+          boxplot_comp_log <- plot_multiboxplot(samples_matrix_comp_no0, logtr = TRUE)
+          
+          png(paste(name_project, "_boxplot_Mcomp" , multiple_comparison, "_std_", name_standardWOsymbol, "_log_NS.png", sep=""), width=7, height=5, units="in", res=150)
+          plot(boxplot_comp_log)
+          dev.off()
         }
       }
         
@@ -707,6 +743,7 @@ if(AMOUNT_OF_MULTIPLE_COMPARISONS >= 1){
         line_ <- paste(c(multiple_comparison, name_standard, name_test, names_groups, amount_groups, mean_groups, median_groups, sd_groups, p_value), collapse='\t')
         append_result_to_report(line_, name_report_ANOVA)
         
+      
         if(is.na(p_value)){
           p_value <- 10000000 #if intensity in both gropus = 0 => means = 0, no diff in means so p-value is inf
           #actually not needed anymore since rm from matrix_no_0 but leave in code
@@ -721,20 +758,17 @@ if(AMOUNT_OF_MULTIPLE_COMPARISONS >= 1){
           plot(boxplot_comp)
           dev.off()
           
-          ##post-hoc Dunn test 
-          #  => to retrieve which group is responsible for sign diff kruskal
-          #https://stackoverflow.com/questions/31434166/which-post-hoc-test-should-i-conduct-after-doing-a-kruskal-wallis
-          #https://stackoverflow.com/questions/44120904/difference-between-posthoc-kruskal-dunn-test-and-dunn-test
-          #https://www.rdocumentation.org/packages/dunn.test/versions/1.3.5/topics/dunn.test
+          boxplot_comp_log <- plot_multiboxplot(samples_matrix_comp_no0, logtr = TRUE)
+          
+          png(paste(name_project, "_boxplot_Mcomp" , multiple_comparison, "_std_", name_standardWOsymbol, "_log_SIGNIF.png", sep=""), width=7, height=5, units="in", res=150)
+          plot(boxplot_comp_log)
+          dev.off()
+          
           library(dunn.test)
           invisible(capture.output({ #wo print output
             if(length(sort(unique(comp))) >2){ #if run mcomp with 2 groups, run wo bh correction
               post_test <- dunn.test(x=comp_variable$variable, g= comp_variable$comp, method = 'bh', altp = TRUE, alpha=0.05) 
             }else(post_test <- dunn.test(x=comp_variable$variable, g= comp_variable$comp, alpha=0.05))
-            #with Benjamini-Hochberg correction 
-            #(why bh: with >>feat, takes into account nr of FDR
-            #Bonferroni "punishes" all input p-values equally, whereas Benjamini-Hochberg (as a way to control the FDR) "punishes" p-values accordingly to their ranking. If you have few tests, it should not make too much of a difference, but if you have many tests (as for example when you test all 20,000 human protein coding genes or even larger sets), it will make a difference. In this case Bonferroni will produce false negatives, in other words it will discard significant observations. Therefore usually I use Benjamini-Hochberg.
-            #https://www.researchgate.net/post/What_is_your_prefered_p-value_correction_for_multiple_tests)
           }))
           
           #report posthoc p-adjusted values (+ all info) for each multiple comparison and each variable (add here)
@@ -749,10 +783,6 @@ if(AMOUNT_OF_MULTIPLE_COMPARISONS >= 1){
           
           append_dataframe_to_report(linePH, name_report_posthocDunn)
           
-          #plot visual Dunn test Significant Differences 
-          #=> NO, not based of diff in mean, since not-normal, only eg distrib possible but same as boxplot
-          #https://www.researchgate.net/post/Kruskal-wallis-and-Dunns-test-interpretation     #ku hier niet zeggen mean verschillend, n-param
-          
         }
         if(p_value >= 0.05){
           comp <- as.numeric(comp) #to nr (only works from char->num, no factors!)
@@ -762,6 +792,11 @@ if(AMOUNT_OF_MULTIPLE_COMPARISONS >= 1){
           boxplot_comp <- plot_multiboxplot(samples_matrix_comp_no0)
           png(paste(name_project, "_boxplot_Mcomp" , multiple_comparison, "_std_", name_standardWOsymbol, "_NS.png", sep=""), width=7, height=5, units="in", res=150)
           plot(boxplot_comp)
+          dev.off()
+          
+          boxplot_comp_log <- plot_multiboxplot(samples_matrix_comp_no0, logtr = TRUE)
+          png(paste(name_project, "_boxplot_Mcomp" , multiple_comparison, "_std_", name_standardWOsymbol, "_log_NS.png", sep=""), width=7, height=5, units="in", res=150)
+          plot(boxplot_comp_log)
           dev.off()
         }
       }
